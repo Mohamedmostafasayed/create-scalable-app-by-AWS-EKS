@@ -1,0 +1,83 @@
+cat <<EOF | kubectl apply -f -
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: new-app
+spec:
+  selector:
+    matchLabels:
+      app: new-app
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: new-app
+    spec:
+      containers:
+      - name: nginx
+        image: nginx
+        ports:
+        - containerPort: 80
+        volumeMounts:
+        - name: nginx-html
+          mountPath: /usr/share/nginx/html
+      volumes:
+      - name: nginx-html
+        configMap:
+          name: new-app-config
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: new-app-config
+data:
+  index.html: |
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Welcome to my new cool app</title>
+        <style>
+            body {
+                text-align: center;
+                font-size: 24px;
+                background-color: #f4f4f4; /* Light gray background */
+                color: #333; /* Dark text color */
+                font-family: 'Arial', sans-serif; /* Use a common sans-serif font */
+            }
+
+            h1 {
+                color: #0066cc; /* Blue heading color */
+                text-shadow: 2px 2px 4px #999; /* Add a subtle text shadow */
+            }
+
+            p {
+                color: #666; /* Gray text color for paragraphs */
+            }
+
+            small {
+                color: #999; /* Light gray text color for small text */
+            }
+        </style>
+    </head>
+    <body>
+        <h1>Welcome to our new cool app</h1>
+        <p><small>This is our company's new Application. Enjoy!</small></p>
+    </body>
+    </html>
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: new-app
+  labels:
+    app: new-app
+spec:
+  ports:
+  - name: http
+    port: 80
+    protocol: TCP
+    targetPort: 80
+  selector:
+    app: new-app
+  type: LoadBalancer
+EOF
